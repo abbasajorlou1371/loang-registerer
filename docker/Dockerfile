@@ -71,11 +71,22 @@ CMD ["php-fpm"]
 # -----------------------------------------------------------------------------
 FROM nginx:${NGINX_VERSION} AS nginx
 
+RUN apk add --no-cache --virtual .ssl-build openssl \
+    && mkdir -p /etc/nginx/certs \
+    && openssl req -x509 -nodes -newkey rsa:2048 \
+        -keyout /etc/nginx/certs/privkey.pem \
+        -out /etc/nginx/certs/fullchain.pem \
+        -days 3650 \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1" \
+    && chmod 600 /etc/nginx/certs/privkey.pem \
+    && apk del .ssl-build
+
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=php /var/www/html/public /var/www/html/public
 
-EXPOSE 80
+EXPOSE 80 443
 HEALTHCHECK --interval=15s --timeout=3s --start-period=45s --retries=8 \
     CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
 
