@@ -38,6 +38,7 @@ services:
     image: loan-registrarer-nginx:local
     ports:
       - "${DOCKER_HTTP_PORT:-4040}:80"
+      - "80:80"
     volumes:
       # Hot-swap APK without rebuilding the nginx image
       - ./public/assets/apk:/var/www/html/public/assets/apk:ro
