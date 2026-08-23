@@ -35,6 +35,7 @@ services:
     image: loan-registrarer-nginx:local
     ports:
       - "4040:80"
+      - "80:80"
     depends_on:
       php:
         condition: service_started
