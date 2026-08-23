@@ -49,14 +49,14 @@ Edit `.env` (loaded by both PHP and the Node socket server):
 |----------|---------|------------------|
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASS` | MySQL connection | Prefer TCP; leave `DB_SOCKET` empty unless using a local Unix socket |
 | `DB_SOCKET` | Optional Unix socket path | XAMPP/local only; clear on remote hosts |
-| `APP_URL` | Public site URL | e.g. `https://loans.example.com` |
+| `APP_URL` | Public site URL | e.g. `http://loans.example.com` |
 | `APP_ENV` | Environment label | Use `production` |
 | `SOCKET_PORT` | Socket HTTP port | Default `3001` |
 | `SOCKET_HOST` | Bind address | `127.0.0.1` locally; Compose sets `0.0.0.0` so Nginx can reach it |
 | `SOCKET_PUBLIC_URL` | Browser-facing Socket.IO base URL | Must match what admins’ browsers can reach (often via reverse proxy) |
 | `SOCKET_EMIT_URL` | PHP → Node emit endpoint | Usually `http://127.0.0.1:3001/emit` |
 | `SOCKET_EMIT_SECRET` | Shared secret for `/emit` | **Set a strong random value** |
-| `SOCKET_CORS_ORIGIN` | Allowed browser origin(s) | Exact app origin, e.g. `https://loans.example.com` |
+| `SOCKET_CORS_ORIGIN` | Allowed browser origin(s) | Exact app origin, e.g. `http://loans.example.com` |
 | `TRANSACTION_API_KEY` | Auth for `POST /api/transaction-message` | **Set a strong key**; send as `X-Api-Key` or `Authorization: Bearer …` |
 
 If `TRANSACTION_API_KEY` or `SOCKET_EMIT_SECRET` are empty, those endpoints accept unauthenticated calls — unsuitable for production.
@@ -108,7 +108,7 @@ Deny direct web access to: `.env`, `config/`, `includes/`, `pages/`, `sql/`, `se
 
 ```nginx
 server {
-    listen 443 ssl http2;
+    listen 80;
     server_name loans.example.com;
     root /var/www/loan-registrarer/public;
     index index.php;
@@ -137,8 +137,8 @@ server {
 If you proxy Socket.IO under the same host, set e.g.:
 
 ```env
-SOCKET_PUBLIC_URL=https://loans.example.com
-SOCKET_CORS_ORIGIN=https://loans.example.com
+SOCKET_PUBLIC_URL=http://loans.example.com
+SOCKET_CORS_ORIGIN=http://loans.example.com
 SOCKET_EMIT_URL=http://127.0.0.1:3001/emit
 ```
 
@@ -191,9 +191,8 @@ PHP notifies the socket after storing a transaction message by POSTing to `SOCKE
 3. [ ] `npm ci && npm run build`
 4. [ ] Web root = `public/`; rewrites work (`/`, `/admin`, `/api/transaction-message`)
 5. [ ] Socket process running; CORS origin matches the site
-6. [ ] HTTPS enabled; session cookies work over HTTPS
-7. [ ] External callers use `POST /api/transaction-message` with `TRANSACTION_API_KEY`
-8. [ ] File permissions: web user can read code; `.env` not world-readable
+6. [ ] External callers use `POST /api/transaction-message` with `TRANSACTION_API_KEY`
+7. [ ] File permissions: web user can read code; `.env` not world-readable
 
 ---
 
@@ -212,7 +211,7 @@ PHP notifies the socket after storing a transaction message by POSTing to `SOCKE
 ## 9. Operations notes
 
 - **Logging:** PHP uses `error_log()` (`app_log`); configure PHP-FPM / web server error logs.
-- **Sessions:** Cookie flags set in the front controller (`HttpOnly`, `SameSite=Lax`, strict mode). Prefer HTTPS and consider `session.cookie_secure=1` in production php.ini.
+- **Sessions:** Cookie flags set in the front controller (`HttpOnly`, `SameSite=Lax`, strict mode).
 - **Showcase resilience:** If MySQL is down, some marketing pages still render; apply/admin/API features that need the DB will fail.
 - **Default admin** (`admin`/`admin`) must never remain on a public host.
 - **Updates:** pull code → `npm ci && npm run build` → run any new SQL migrations → reload PHP-FPM → restart socket service.
