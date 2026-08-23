@@ -86,8 +86,7 @@ FROM node:${NODE_VERSION} AS socket-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --no-audit --no-fund \
-    && npm cache clean --force
+    npm ci --omit=dev --no-audit --no-fund
 
 FROM node:${NODE_VERSION} AS socket
 WORKDIR /app
