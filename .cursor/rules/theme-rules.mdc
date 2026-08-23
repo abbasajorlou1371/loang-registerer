@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# Rules: Financial Loan Theme
+
+## Design
+- Build a premium, modern fintech UI focused on trust and conversion.
+- Use RTL-first design with full LTR compatibility.
+- Keep layouts clean, spacious, and professional.
+- Avoid excessive animations, gradients, glassmorphism, and visual clutter.
+- Use rounded `xl` cards and subtle shadows.
+
+## Colors
+- Primary: Deep Navy `#0B1220`
+- CTA: Emerald `#10B981`
+- CTA hover: `#059669`
+- Background: `#F8FAFC`
+- Surface: `#FFFFFF`
+- Text: `#0F172A`
+- Muted: `#64748B`
+- Border: `#E2E8F0`
+
+## Typography
+- Use Vazirmatn for Persian/Arabic text.
+- Use Inter or Geist for Latin text.
+- Use clear hierarchy with large, bold hero headings.
+- Keep body text highly readable.
+
+## Conversion
+- Primary CTA must be visually prominent.
+- Use action-oriented Persian labels such as `شروع درخواست وام` and `درخواست وام`.
+- Place the primary CTA above the fold.
+- Show loan amount, repayment period, and estimated installment early.
+- Use trust signals near CTAs: security, transparency, fast review.
+- Keep registration flow short and visually simple.
+
+## Components
+- Cards: `rounded-xl`, white surface, subtle shadow/border.
+- Buttons: `rounded-xl`, strong contrast, clear hover/focus states.
+- Inputs: large, comfortable, accessible touch targets.
+- Use icons sparingly and consistently.
+- Use financial illustrations/charts instead of generic stock imagery.
+
+## RTL
+- Use logical Tailwind utilities: `ms-*`, `me-*`, `ps-*`, `pe-*`.
+- Use `text-start` / `text-end`.
+- Prefer `gap-*` over directional margins.
+- Avoid `ml-*`, `mr-*`, `pl-*`, `pr-*`, `left-*`, `right-*`.
+- Directional icons must mirror correctly in RTL.
+- Components must support both `dir="rtl"` and `dir="ltr"`.
+
+## Responsive
+- Mobile-first.
+- CTA and key loan information must remain visible and accessible on mobile.
+- Never sacrifice readability for visual density.
+- Use responsive spacing and typography instead of fixed dimensions.
+
+## UX
+- Clearly communicate fees, rates, repayment terms, and requirements.
+- Never use misleading urgency or deceptive patterns.
+- Make security and privacy information easy to find.
+- Keep forms focused: one clear action per step.

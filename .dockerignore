@@ -1,0 +1,26 @@
+# Git, IDE, local env
+.git
+.gitignore
+.gitattributes
+.cursor
+.idea
+.vscode
+*.log
+*.md
+!docker/**
+.env
+.env.*
+!.env.example
+
+# Dependencies and build leftovers (rebuilt in image)
+node_modules
+vendor
+public/assets/css/app.css.map
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Not needed in runtime images
+agent-transcripts
+terminals

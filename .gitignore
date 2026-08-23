@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+vendor/
+public/assets/css/app.css.map
+*.log

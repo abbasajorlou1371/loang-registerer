@@ -1,0 +1,2 @@
+docker/**/*.sh text eol=lf
+docker/php/entrypoint.sh text eol=lf

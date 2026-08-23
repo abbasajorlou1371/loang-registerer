@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="148" height="42" viewBox="0 0 148 42" role="img" aria-label="SADAD">
+  <rect x="2" y="8" width="26" height="26" rx="3" fill="#f5b400"/>
+  <path d="M8 27c4-8 14-10 18-4" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M11 18l6-6 6 5" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="36" y="29" font-family="Arial Black, Arial, sans-serif" font-size="22" font-weight="800" fill="#111">SADAD</text>
+</svg>

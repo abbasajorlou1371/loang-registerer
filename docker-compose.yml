@@ -1,0 +1,103 @@
+# Loan Registrarer — lightweight PHP-FPM + Nginx + Socket.IO + MariaDB
+#
+#   docker compose up -d --build
+#   open http://localhost
+#   admin login: admin / admin
+#
+# Do not interpolate DB_HOST / APP_URL / SOCKET_* from the project .env
+# (that file is for local XAMPP / php -S, not containers).
+
+name: loan-registrarer
+
+x-app-env: &app-env
+  APP_ENV: production
+  APP_URL: http://localhost
+  DB_HOST: db
+  DB_PORT: "3306"
+  DB_NAME: loan_registrarer
+  DB_USER: loanapp
+  DB_PASS: loanapp
+  DB_SOCKET: ""
+  SOCKET_HOST: "0.0.0.0"
+  SOCKET_PORT: "3001"
+  SOCKET_PUBLIC_URL: http://localhost
+  SOCKET_EMIT_URL: http://socket:3001/emit
+  SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
+  SOCKET_CORS_ORIGIN: http://localhost,http://127.0.0.1
+  TRANSACTION_API_KEY: ${DOCKER_TRANSACTION_API_KEY:-changeme-transaction-key}
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: nginx
+    image: loan-registrarer-nginx:local
+    ports:
+      - "80:80"
+    depends_on:
+      php:
+        condition: service_started
+      socket:
+        condition: service_healthy
+    restart: unless-stopped
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: php
+    image: loan-registrarer-php:local
+    environment:
+      <<: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'",
+        ]
+      interval: 15s
+      timeout: 3s
+      retries: 8
+      start_period: 90s
+    restart: unless-stopped
+
+  socket:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: socket
+    image: loan-registrarer-socket:local
+    environment:
+      NODE_ENV: production
+      SOCKET_HOST: "0.0.0.0"
+      SOCKET_PORT: "3001"
+      SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
+      SOCKET_CORS_ORIGIN: http://localhost,http://127.0.0.1
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MYSQL_DATABASE: loan_registrarer
+      MYSQL_USER: loanapp
+      MYSQL_PASSWORD: loanapp
+      MYSQL_ROOT_PASSWORD: ${DOCKER_MYSQL_ROOT_PASSWORD:-changeme-root}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./docker/mysql/low-memory.cnf:/etc/mysql/conf.d/low-memory.cnf:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  db_data:
