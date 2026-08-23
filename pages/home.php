@@ -150,7 +150,7 @@ require APP_ROOT . '/includes/header.php';
           <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M12 3v12M7 10l5 5 5-5M5 19h14" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          دانلود loan.apk
+          دانلود موبایل بانک بام
         </a>
       </div>
     </div>
