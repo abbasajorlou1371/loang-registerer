@@ -1,29 +1,32 @@
-# Loan Registrarer — lightweight PHP-FPM + Nginx + Socket.IO + MariaDB
+# Loan Registrarer — PHP-FPM + Nginx + Socket.IO + MariaDB
 #
+# Local (defaults):
 #   docker compose up -d --build
-#   open http://localhost
-#   admin login: admin / admin
+#   open http://localhost:4040
 #
-# Do not interpolate DB_HOST / APP_URL / SOCKET_* from the project .env
-# (that file is for local XAMPP / php -S, not containers).
+# Production (copy .env.docker.example → .env.docker, then):
+#   docker compose --env-file .env.docker up -d --build
+#
+# DOCKER_* vars are used for Compose interpolation so they never clash with the
+# project .env used by XAMPP / php -S (DB_HOST, APP_URL, SOCKET_*).
 
 name: loan-registrarer
 
 x-app-env: &app-env
-  APP_ENV: production
-  APP_URL: http://217.218.238.207:4040
+  APP_ENV: ${DOCKER_APP_ENV:-local}
+  APP_URL: ${DOCKER_APP_URL:-http://localhost:4040}
   DB_HOST: db
   DB_PORT: "3306"
-  DB_NAME: loan_registrarer
-  DB_USER: loanapp
-  DB_PASS: loanapp
+  DB_NAME: ${DOCKER_DB_NAME:-loan_registrarer}
+  DB_USER: ${DOCKER_DB_USER:-loanapp}
+  DB_PASS: ${DOCKER_DB_PASS:-loanapp}
   DB_SOCKET: ""
   SOCKET_HOST: "0.0.0.0"
   SOCKET_PORT: "3001"
-  SOCKET_PUBLIC_URL: http://217.218.238.207:4040
+  SOCKET_PUBLIC_URL: ${DOCKER_SOCKET_PUBLIC_URL:-${DOCKER_APP_URL:-http://localhost:4040}}
   SOCKET_EMIT_URL: http://socket:3001/emit
   SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
-  SOCKET_CORS_ORIGIN: http://217.218.238.207:4040,http://127.0.0.1
+  SOCKET_CORS_ORIGIN: ${DOCKER_SOCKET_CORS_ORIGIN:-${DOCKER_APP_URL:-http://localhost:4040},http://127.0.0.1:4040,http://localhost,http://127.0.0.1}
   TRANSACTION_API_KEY: ${DOCKER_TRANSACTION_API_KEY:-changeme-transaction-key}
 
 services:
@@ -34,8 +37,10 @@ services:
       target: nginx
     image: loan-registrarer-nginx:local
     ports:
-      - "4040:80"
-      - "80:80"
+      - "${DOCKER_HTTP_PORT:-4040}:80"
+    volumes:
+      # Hot-swap APK without rebuilding the nginx image
+      - ./public/assets/apk:/var/www/html/public/assets/apk:ro
     depends_on:
       php:
         condition: service_started
@@ -77,15 +82,15 @@ services:
       SOCKET_HOST: "0.0.0.0"
       SOCKET_PORT: "3001"
       SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
-      SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost,http://127.0.0.1}
+      SOCKET_CORS_ORIGIN: ${DOCKER_SOCKET_CORS_ORIGIN:-${DOCKER_APP_URL:-http://localhost:4040},http://127.0.0.1:4040,http://localhost,http://127.0.0.1}
     restart: unless-stopped
 
   db:
     image: mariadb:11.4
     environment:
-      MYSQL_DATABASE: loan_registrarer
-      MYSQL_USER: loanapp
-      MYSQL_PASSWORD: loanapp
+      MYSQL_DATABASE: ${DOCKER_DB_NAME:-loan_registrarer}
+      MYSQL_USER: ${DOCKER_DB_USER:-loanapp}
+      MYSQL_PASSWORD: ${DOCKER_DB_PASS:-loanapp}
       MYSQL_ROOT_PASSWORD: ${DOCKER_MYSQL_ROOT_PASSWORD:-changeme-root}
     volumes:
       - db_data:/var/lib/mysql

@@ -1,6 +1,8 @@
 node_modules/
 .env
+.env.docker
 .DS_Store
 vendor/
 public/assets/css/app.css.map
+public/assets/apk/*.apk
 *.log

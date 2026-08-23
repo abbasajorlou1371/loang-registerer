@@ -134,6 +134,28 @@ require APP_ROOT . '/includes/header.php';
     </div>
   </section>
 
+  <section class="border-t border-line sm:hidden" aria-labelledby="app-download-title">
+    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <div class="card p-6">
+        <h2 id="app-download-title" class="text-lg font-bold text-navy">اپلیکیشن اندروید</h2>
+        <p class="mt-2 text-sm leading-relaxed text-muted">
+          فایل نصب را دانلود کنید تا درخواست و پیگیری وام را روی موبایل انجام دهید.
+        </p>
+        <a
+          href="/assets/apk/loan.apk"
+          class="btn-primary mt-5 w-full"
+          download="loan.apk"
+          type="application/vnd.android.package-archive"
+        >
+          <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 3v12M7 10l5 5 5-5M5 19h14" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          دانلود loan.apk
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section aria-labelledby="how-title">
     <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
       <h2 id="how-title" class="section-title">نحوه کار</h2>
