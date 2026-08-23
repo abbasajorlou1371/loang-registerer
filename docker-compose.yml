@@ -11,7 +11,7 @@ name: loan-registrarer
 
 x-app-env: &app-env
   APP_ENV: production
-  APP_URL: http://localhost
+  APP_URL: ${APP_URL:-http://localhost}
   DB_HOST: db
   DB_PORT: "3306"
   DB_NAME: loan_registrarer
@@ -20,10 +20,10 @@ x-app-env: &app-env
   DB_SOCKET: ""
   SOCKET_HOST: "0.0.0.0"
   SOCKET_PORT: "3001"
-  SOCKET_PUBLIC_URL: http://localhost
+  SOCKET_PUBLIC_URL: ${SOCKET_PUBLIC_URL:-http://localhost}
   SOCKET_EMIT_URL: http://socket:3001/emit
   SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
-  SOCKET_CORS_ORIGIN: http://localhost,http://127.0.0.1
+  SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost,http://127.0.0.1}
   TRANSACTION_API_KEY: ${DOCKER_TRANSACTION_API_KEY:-changeme-transaction-key}
 
 services:
@@ -34,7 +34,7 @@ services:
       target: nginx
     image: loan-registrarer-nginx:local
     ports:
-      - "80:80"
+      - "4040:80"
     depends_on:
       php:
         condition: service_started
@@ -76,7 +76,7 @@ services:
       SOCKET_HOST: "0.0.0.0"
       SOCKET_PORT: "3001"
       SOCKET_EMIT_SECRET: ${DOCKER_SOCKET_EMIT_SECRET:-changeme-emit-secret}
-      SOCKET_CORS_ORIGIN: http://localhost,http://127.0.0.1
+      SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost,http://127.0.0.1}
     restart: unless-stopped
 
   db:
