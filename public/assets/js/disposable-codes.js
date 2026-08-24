@@ -6,114 +6,45 @@
 
   const config = {
     socketUrl: root.getAttribute("data-socket-url") || "http://127.0.0.1:3001",
-    ttlSeconds: Number(root.getAttribute("data-ttl-seconds") || 120),
   };
-  const ttlSeconds = Number(config.ttlSeconds) || 120;
-  const tbody = document.querySelector("[data-codes-tbody]");
-  const emptyWrap = document.querySelector("[data-codes-empty-wrap]");
-  const tableWrap = document.querySelector("[data-codes-table-wrap]");
+  const list = document.querySelector("[data-codes-list]");
+  const emptyEl = document.querySelector("[data-codes-empty]");
   const statusEl = document.querySelector("[data-socket-status]");
 
-  if (!(tbody instanceof HTMLElement)) {
+  if (!(list instanceof HTMLElement)) {
     return;
   }
 
-  const toFaDigits = (value) =>
-    String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
-
-  const formatAmount = (amount) =>
-    toFaDigits(Number(amount || 0).toLocaleString("en-US"));
-
-  const receivedAtSeconds = (receivedAt) => {
-    const value = Number(receivedAt) || 0;
-    if (value >= 1_000_000_000_000) {
-      return Math.floor(value / 1000);
+  const formatData = (value) => {
+    const raw = String(value ?? "");
+    if (raw === "") {
+      return "";
     }
-    return Math.floor(value);
-  };
-
-  const isExpired = (receivedAt, nowMs = Date.now()) => {
-    const age = Math.floor(nowMs / 1000) - receivedAtSeconds(receivedAt);
-    return age >= ttlSeconds;
-  };
-
-  const formatReceivedAt = (receivedAt) => {
-    const seconds = receivedAtSeconds(receivedAt);
-    if (seconds <= 0) {
-      return "—";
+    try {
+      return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+      return raw;
     }
-    const date = new Date(seconds * 1000);
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    const hh = String(date.getHours()).padStart(2, "0");
-    const mm = String(date.getMinutes()).padStart(2, "0");
-    const ss = String(date.getSeconds()).padStart(2, "0");
-    return toFaDigits(`${y}/${m}/${d} ${hh}:${mm}:${ss}`);
   };
 
   const syncVisibility = () => {
-    const hasRows = tbody.querySelectorAll("[data-code-row]").length > 0;
-    if (emptyWrap) {
-      emptyWrap.hidden = hasRows;
-    }
-    if (tableWrap) {
-      tableWrap.hidden = !hasRows;
+    const hasRows = list.querySelectorAll("[data-code-row]").length > 0;
+    if (emptyEl) {
+      emptyEl.hidden = hasRows;
     }
   };
 
-  const refreshExpiryBadges = () => {
-    const now = Date.now();
-    tbody.querySelectorAll("[data-code-row]").forEach((row) => {
-      const receivedAt = row.getAttribute("data-received-at") || "0";
-      const badge = row.querySelector("[data-expiry-badge]");
-      if (!(badge instanceof HTMLElement)) {
-        return;
-      }
-      const expired = isExpired(receivedAt, now);
-      const activeLabel = badge.getAttribute("data-active-label") || "معتبر";
-      const expiredLabel = badge.getAttribute("data-expired-label") || "منقضی";
-      badge.textContent = expired ? expiredLabel : activeLabel;
-      badge.classList.toggle("badge-warn", expired);
-    });
-  };
+  const createAlert = (message) => {
+    const wrap = document.createElement("div");
+    wrap.className = "alert alert-info";
+    wrap.setAttribute("data-code-row", "");
+    wrap.setAttribute("data-id", String(message.id || ""));
 
-  const createRow = (message) => {
-    const tr = document.createElement("tr");
-    tr.setAttribute("data-code-row", "");
-    tr.setAttribute("data-id", String(message.id || ""));
-    tr.setAttribute("data-received-at", String(message.receivedAt || ""));
+    const pre = document.createElement("pre");
+    pre.textContent = formatData(message.data);
+    wrap.appendChild(pre);
 
-    const expired = Boolean(message.isExpired) || isExpired(message.receivedAt);
-    const cells = [
-      { text: message.disposableCode || "", className: "font-latin font-semibold tracking-wide" },
-      { text: message.bank || "" },
-      { text: message.destination || "", className: "font-latin" },
-      { text: formatAmount(message.amount), className: "font-latin" },
-      { text: message.currency || "", className: "font-latin" },
-      { text: formatReceivedAt(message.receivedAt) },
-    ];
-
-    cells.forEach(({ text, className }) => {
-      const td = document.createElement("td");
-      if (className) {
-        td.className = className;
-      }
-      td.textContent = String(text);
-      tr.appendChild(td);
-    });
-
-    const statusTd = document.createElement("td");
-    const badge = document.createElement("span");
-    badge.className = expired ? "badge badge-warn" : "badge";
-    badge.setAttribute("data-expiry-badge", "");
-    badge.setAttribute("data-expired-label", "منقضی");
-    badge.setAttribute("data-active-label", "معتبر");
-    badge.textContent = expired ? "منقضی" : "معتبر";
-    statusTd.appendChild(badge);
-    tr.appendChild(statusTd);
-
-    return tr;
+    return wrap;
   };
 
   const prependMessage = (message) => {
@@ -121,12 +52,21 @@
       return;
     }
     const id = String(message.id || "");
-    if (id && tbody.querySelector(`[data-code-row][data-id="${CSS.escape(id)}"]`)) {
+    if (id && list.querySelector(`[data-code-row][data-id="${CSS.escape(id)}"]`)) {
       return;
     }
-    tbody.prepend(createRow(message));
+    const alertEl = createAlert(message);
+    if (emptyEl instanceof HTMLElement && emptyEl.parentNode === list) {
+      emptyEl.insertAdjacentElement("afterend", alertEl);
+    } else {
+      list.prepend(alertEl);
+    }
     syncVisibility();
-    refreshExpiryBadges();
+  };
+
+  const clearMessages = () => {
+    list.querySelectorAll("[data-code-row]").forEach((row) => row.remove());
+    syncVisibility();
   };
 
   const setStatus = (text) => {
@@ -135,8 +75,6 @@
     }
   };
 
-  setInterval(refreshExpiryBadges, 1000);
-  refreshExpiryBadges();
   syncVisibility();
 
   if (typeof window.io !== "function") {
@@ -163,5 +101,9 @@
 
   socket.on("transaction_message:created", (payload) => {
     prependMessage(payload);
+  });
+
+  socket.on("transaction_message:cleared", () => {
+    clearMessages();
   });
 })();

@@ -387,6 +387,21 @@
     color: var(--color-muted);
   }
 
+  .alert-info {
+    border-color: color-mix(in srgb, var(--color-navy) 22%, var(--color-line));
+    background-color: color-mix(in srgb, var(--color-navy) 6%, var(--color-surface));
+    color: var(--color-ink);
+  }
+
+  .alert-info pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--font-latin);
+    font-size: 0.875rem;
+    color: var(--color-ink);
+  }
+
   .alert-warning {
     border-color: color-mix(in srgb, #d97706 35%, var(--color-line));
     background-color: color-mix(in srgb, #d97706 8%, var(--color-surface));

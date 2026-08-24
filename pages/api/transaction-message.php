@@ -23,18 +23,7 @@ if (rate_limited('transaction_message', 60, 60)) {
     ], 429);
 }
 
-$payload = transaction_message_read_payload();
-$validated = transaction_message_validate($payload);
-
-if (!$validated['ok']) {
-    json_response([
-        'ok' => false,
-        'error' => 'Validation failed',
-        'errors' => $validated['errors'],
-    ], 422);
-}
-
-$row = transaction_message_create($validated['data']);
+$row = transaction_message_create(transaction_message_read_payload());
 if ($row === null) {
     json_response([
         'ok' => false,
