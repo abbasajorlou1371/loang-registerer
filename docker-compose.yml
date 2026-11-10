@@ -2,7 +2,7 @@
 #
 # Local (defaults):
 #   docker compose up -d --build
-#   open http://localhost
+#   open http://localhost:8080
 #
 # Production (copy .env.docker.example → .env.docker, then):
 #   docker compose --env-file .env.docker up -d --build
@@ -37,7 +37,9 @@ services:
       target: nginx
     image: loan-registrarer-nginx:local
     ports:
-      - "${DOCKER_HTTP_PORT:-80}:80"
+      # aaPanel owns public ports 80/443 in production. Keep the container
+      # reachable only from the host reverse proxy by default.
+      - "${DOCKER_HTTP_BIND:-127.0.0.1}:${DOCKER_HTTP_PORT:-8080}:80"
     volumes:
       # Hot-swap APK without rebuilding the nginx image
       - ./public/assets/apk:/var/www/html/public/assets/apk:ro

@@ -239,13 +239,17 @@ Open `http://localhost:8000` and `http://localhost:8000/admin/login`.
 
 ## 10. Docker
 
-Nginx listens on **port 80**. PHP-FPM, Socket.IO, and MariaDB stay on the internal Compose network. Images are Alpine multi-stage builds (CSS compiled in a throwaway Node stage).
+The Compose Nginx listens on container port **80**, but is published on host port
+**8080 bound to 127.0.0.1 by default**. This allows aaPanel Nginx to keep owning
+public ports 80/443 and reverse-proxy the domain to Docker. PHP-FPM, Socket.IO,
+and MariaDB stay on the internal Compose network. Images are Alpine multi-stage
+builds (CSS compiled in a throwaway Node stage).
 
 ```bash
 docker compose up -d --build
 ```
 
-Open `http://localhost` and `http://localhost/admin/login` (default admin: `admin` / `admin`). Schema and catalog seed run on first database volume create; the PHP container seeds the admin user on startup.
+Open `http://localhost:8080` and `http://localhost:8080/admin/login` (default admin: `admin` / `admin`). Schema and catalog seed run on first database volume create; the PHP container seeds the admin user on startup.
 
 Compose does **not** reuse `DB_HOST` / `APP_URL` / `SOCKET_*` from the project `.env` (those values target XAMPP / `php -S`). Optional overrides:
 
@@ -254,8 +258,43 @@ Compose does **not** reuse `DB_HOST` / `APP_URL` / `SOCKET_*` from the project `
 | `DOCKER_MYSQL_ROOT_PASSWORD` | `changeme-root` |
 | `DOCKER_SOCKET_EMIT_SECRET` | `changeme-emit-secret` |
 | `DOCKER_TRANSACTION_API_KEY` | `changeme-transaction-key` |
+| `DOCKER_HTTP_BIND` | `127.0.0.1` |
+| `DOCKER_HTTP_PORT` | `8080` |
 
 Socket.IO is proxied at `/socket.io/` on the same host. Inside Compose, PHP emits to `http://socket:3001/emit`. The Node server binds `SOCKET_HOST=0.0.0.0` in Docker (still `127.0.0.1` for local `npm run socket`).
+
+### aaPanel reverse proxy
+
+Add `melli-loan.jo3.org` under **Website → Add site → Proxy Project** and proxy
+it to `http://127.0.0.1:8080`. Enable HTTPS/Let's Encrypt in aaPanel and force
+HTTPS after the certificate is issued. The proxy must preserve WebSocket
+upgrades for `/socket.io/`:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location /socket.io/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 86400;
+}
+```
+
+Do not expose host port 8080 publicly; the Compose binding is intentionally
+loopback-only. Ensure DNS `A` for `melli-loan.jo3.org` points to the server's
+public IPv4 address, and remove any `AAAA` record unless IPv6 is configured.
 
 ```bash
 docker compose logs -f php nginx socket db
